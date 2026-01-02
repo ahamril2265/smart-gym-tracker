@@ -27,7 +27,7 @@ module.exports = {
                 role: 'admin',
                 member_id: member_id,
                 membership_status: 'active', // Raw column name
-                membership_type: 'yearly',   // Raw column name
+                membership_type: 'monthly',   // Raw column name
                 activation_token: null,
                 trainer_status: 'off_duty',
                 amount_paid: 0,
