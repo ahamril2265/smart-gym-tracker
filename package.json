@@ -1,0 +1,16 @@
+{
+    "name": "smart-gym-tracker",
+    "version": "1.0.0",
+    "description": "Smart Gym Tracker Monorepo",
+    "scripts": {
+        "start": "node server/server.js",
+        "build": "./render-build.sh",
+        "install-deps": "npm install && npm install --prefix client && npm install --prefix server"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "dependencies": {
+        "concurrently": "^8.0.0"
+    }
+}
