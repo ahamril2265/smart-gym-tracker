@@ -55,21 +55,17 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!user) {
+      console.log('Login failed: User not found for email:', email);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
 
     // Check password
-    // Note: Model might be "password" or "password_hash"
-    // Migration 20260102190000-make-password-nullable.js suggests column name 'password' was altered.
-    // User model (Step 504) likely has aliases.
-    // I will check `password_hash` first, then valid.
-
-    // Actually, viewing `server/models/user.js` would confirm field value.
-    // I will check it in a sec if this fails, but usually `password_hash` is proper.
-    // However, raw SQL in old auth.js used `password`.
-    // Sequelize model usually maps `password` attribute to `password` column unless aliased.
-
     const valid = await bcrypt.compare(password, user.password_hash || user.password);
-    if (!valid) return res.status(400).json({ error: "Invalid credentials" });
+    if (!valid) {
+      console.log('Login failed: Password mismatch for user:', email);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
 
     // Generate Token
     // Payload: id, role, member_id
