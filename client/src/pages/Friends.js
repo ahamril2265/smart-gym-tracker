@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 
 export default function Friends() {
@@ -10,30 +10,26 @@ export default function Friends() {
   const [workouts, setWorkouts] = useState([]);
 
   const fetchData = () => {
-    axios.get("http://localhost:5001/api/user/all", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setUsers(res.data));
-    axios.get("http://localhost:5001/api/friends", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setFriends(res.data));
-    axios.get("http://localhost:5001/api/friends/pending", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setPending(res.data));
-    axios.get("http://localhost:5001/api/friends/workouts", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setWorkouts(res.data));
+    api.get("/user/all").then(res => setUsers(res.data));
+    api.get("/friends").then(res => setFriends(res.data));
+    api.get("/friends/pending").then(res => setPending(res.data));
+    api.get("/friends/workouts").then(res => setWorkouts(res.data));
   };
 
   useEffect(fetchData, []);
 
   const sendRequest = (friendId) => {
-    axios.post(`http://localhost:5001/api/friends/request/${friendId}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+    api.post(`/friends/request/${friendId}`)
       .then(() => { alert("Request sent!"); fetchData(); });
   };
 
   const handleAccept = (id) => {
-    axios.post(`http://localhost:5001/api/friends/accept/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+    api.post(`/friends/accept/${id}`)
       .then(() => fetchData());
   };
 
   const handleReject = (id) => {
-    axios.post(`http://localhost:5001/api/friends/reject/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+    api.post(`/friends/reject/${id}`)
       .then(() => fetchData());
   };
 

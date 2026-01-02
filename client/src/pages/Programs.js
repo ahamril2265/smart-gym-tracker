@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from "../utils/api";
 import { Link } from 'react-router-dom';
 import BackButton from "../components/BackButton";
 
@@ -8,12 +8,12 @@ export default function Programs() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/programs').then(r => setPrograms(r.data)).catch(e => console.error(e));
+    api.get('/programs').then(r => setPrograms(r.data)).catch(e => console.error(e));
   }, []);
 
   const assign = async (id) => {
     try {
-      await axios.post(`http://localhost:5001/api/programs/assign/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post(`/programs/assign/${id}`, {});
       alert('Program assigned. Go to My Program or Log Workout.');
     } catch (err) { console.error(err); alert('Failed to assign'); }
   };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 
 export default function WorkoutForm({ onAdd }) {
   const [exercise, setExercise] = useState("");
@@ -12,11 +12,7 @@ export default function WorkoutForm({ onAdd }) {
     if (!exercise || !sets || !reps) return alert("Please fill all fields");
 
     try {
-      const res = await axios.post(
-        "http://localhost:5001/api/workouts",
-        { exercise, sets, reps, weight },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post("/workouts", { exercise, sets, reps, weight });
       onAdd(res.data);
       setExercise("");
       setSets("");

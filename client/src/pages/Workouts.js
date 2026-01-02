@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 
 export default function Workouts() {
   const [workouts, setWorkouts] = useState([]);
@@ -9,9 +9,7 @@ export default function Workouts() {
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/workouts", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/workouts");
         setWorkouts(res.data);
       } catch (err) {
         console.error("Error fetching workouts:", err);

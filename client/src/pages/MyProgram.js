@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from "../utils/api";
 import { Link } from 'react-router-dom';
 import BackButton from "../components/BackButton";
 
@@ -8,7 +8,7 @@ export default function MyProgram() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/programs/mine', { headers: { Authorization: `Bearer ${token}` } })
+    api.get('/programs/mine')
       .then(r => setProgram(r.data.program)).catch(e => console.error(e));
   }, []);
 

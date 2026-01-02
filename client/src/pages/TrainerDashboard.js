@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 
 export default function TrainerDashboard() {
@@ -15,12 +15,8 @@ export default function TrainerDashboard() {
 
     const fetchData = async () => {
         try {
-            const clientsRes = await axios.get("http://localhost:5001/api/trainer/clients", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const programsRes = await axios.get("http://localhost:5001/api/programs", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const clientsRes = await api.get("/trainer/clients");
+            const programsRes = await api.get("/programs");
             setClients(clientsRes.data);
             setPrograms(programsRes.data);
             setLoading(false);
@@ -33,16 +29,12 @@ export default function TrainerDashboard() {
 
     useEffect(() => {
         fetchData();
-    }, [token]);
+    }, []);
 
     const handleAssignProgram = async (userId, programId) => {
         if (!programId) return;
         try {
-            await axios.post(
-                "http://localhost:5001/api/trainer/assign-program",
-                { userId, programId },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post("/trainer/assign-program", { userId, programId });
             alert("Program assigned!");
         } catch (err) {
             alert("Failed to assign program");
@@ -53,11 +45,7 @@ export default function TrainerDashboard() {
     const handleAddClient = async (e) => {
         e.preventDefault();
         try {
-            await axios.post(
-                "http://localhost:5001/api/trainer/clients",
-                formData,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post("/trainer/clients", formData);
             alert("Client created and assigned!");
             setIsModalOpen(false);
             setFormData({ username: "", email: "", password: "" });
@@ -71,9 +59,7 @@ export default function TrainerDashboard() {
     const handleUnassign = async (clientId) => {
         if (!window.confirm("Are you sure you want to remove this client? They will still have a user account but won't be assigned to you.")) return;
         try {
-            await axios.delete(`http://localhost:5001/api/trainer/clients/${clientId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/trainer/clients/${clientId}`);
             fetchData();
         } catch (err) {
             alert("Failed to unassign client");

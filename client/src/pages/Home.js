@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 
 /** Turn camelCase or snake_case keys into human labels */
 function formatLabel(key) {
@@ -18,8 +18,7 @@ export default function Home() {
   useEffect(() => {
     const fetchGym = async () => {
       try {
-        const base = "http://localhost:5001/api";
-        const res = await axios.get(`${base}/gym`);
+        const res = await api.get("/gym");
         setGym(res.data);
       } catch (err) {
         console.error("Failed to fetch gym info:", err);

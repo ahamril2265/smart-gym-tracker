@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -17,9 +17,7 @@ export default function Profile() {
   ];
 
   useEffect(() => {
-    axios.get("http://localhost:5001/api/user/profile", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setProfile(res.data));
+    api.get("/user/profile").then(res => setProfile(res.data));
   }, []);
 
   const handleSave = async () => {
@@ -37,16 +35,13 @@ export default function Profile() {
     }
 
     try {
-      await axios.put("http://localhost:5001/api/user/profile", formData, {
+      await api.put("/user/profile", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
       // Refresh profile to show new image
-      const res = await axios.get("http://localhost:5001/api/user/profile", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get("/user/profile");
       setProfile(res.data);
       setEdit(false);
     } catch (err) {

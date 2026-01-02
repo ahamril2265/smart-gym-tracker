@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 // In real world we would use react-qr-reader to scan from webcam
 // For this environment, we simulate scanning by pasting/typing the content from the QR code (User ID or JSON)
@@ -42,7 +42,7 @@ export default function AttendanceScanner() {
 
         try {
             // Public endpoint, no auth header needed
-            const res = await axios.post("http://localhost:5001/api/attendance/check-in", payload);
+            const res = await api.post("/attendance/check-in", payload);
             setStatus("success");
             setMessage("Welcome!");
             setScannedUser({ name: res.data.user, time: new Date(res.data.time).toLocaleTimeString() });

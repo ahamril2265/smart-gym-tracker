@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS, ArcElement, Tooltip, Legend
@@ -15,16 +15,14 @@ export default function Nutrition() {
   const [stats, setStats] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   const fetchMeals = () => {
-    axios.get("http://localhost:5001/api/meals", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setMeals(res.data));
-    axios.get("http://localhost:5001/api/meals/stats", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => setStats(res.data));
+    api.get("/meals").then(res => setMeals(res.data));
+    api.get("/meals/stats").then(res => setStats(res.data));
   };
 
   useEffect(fetchMeals, []);
 
   const handleAdd = () => {
-    axios.post("http://localhost:5001/api/meals", meal, { headers: { Authorization: `Bearer ${token}` } })
+    api.post("/meals", meal)
       .then(() => { setMeal({ ...meal, food: "", calories: "", protein: "", carbs: "", fat: "" }); fetchMeals(); });
   };
 

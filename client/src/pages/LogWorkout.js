@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 
 export default function LogWorkout() {
@@ -8,7 +8,7 @@ export default function LogWorkout() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/programs/mine', { headers: { Authorization: `Bearer ${token}` } })
+    api.get('/programs/mine')
       .then(r => {
         const p = r.data.program;
         setProgram(p);
@@ -33,7 +33,7 @@ export default function LogWorkout() {
 
   const submit = async () => {
     try {
-      await axios.post('http://localhost:5001/api/logs', { program_id: program?.id || null, details }, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post('/logs', { program_id: program?.id || null, details });
       alert('Workout logged');
       // Reset weights (but keep exercises)
       setDetails(details.map(d => ({ ...d, weight: '' })));

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import BackButton from "../components/BackButton";
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
@@ -38,11 +38,9 @@ export default function ProgramCreator() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("http://localhost:5001/api/programs", {
+            await api.post("/programs", {
                 ...program,
                 exercises
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
             alert("Program Created Successfully!");
             // Reset or Redirect
