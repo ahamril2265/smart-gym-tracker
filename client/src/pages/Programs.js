@@ -5,7 +5,7 @@ import BackButton from "../components/BackButton";
 
 export default function Programs() {
   const [programs, setPrograms] = useState([]);
-  const token = localStorage.getItem('token');
+
 
   useEffect(() => {
     api.get('/programs').then(r => setPrograms(r.data)).catch(e => console.error(e));

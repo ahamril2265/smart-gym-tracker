@@ -1,11 +1,15 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
-console.log("DB Config:", {
-  DB_NAME: process.env.DB_NAME,
-  DB_USER: process.env.DB_USER,
-  DB_PASS: process.env.DB_PASS,
-});
+if (process.env.DB_NAME) {
+  console.log("DB Config:", {
+    DB_NAME: process.env.DB_NAME,
+    DB_USER: process.env.DB_USER,
+    // DB_PASS: process.env.DB_PASS, // Do not log passwords
+  });
+} else if (process.env.DATABASE_URL) {
+  console.log("Using DATABASE_URL for connection.");
+}
 
 let sequelize;
 

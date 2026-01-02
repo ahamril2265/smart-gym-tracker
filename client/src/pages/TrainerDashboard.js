@@ -11,7 +11,7 @@ export default function TrainerDashboard() {
         username: "", email: "", password: ""
     });
 
-    const token = localStorage.getItem("token");
+
 
     const fetchData = async () => {
         try {

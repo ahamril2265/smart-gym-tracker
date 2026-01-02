@@ -26,7 +26,14 @@ async function init() {
         }
 
         transporter = nodemailer.createTransport(config);
-        console.log(`Email Service Initialized with ${config.service || config.host}`);
+
+        try {
+            await transporter.verify();
+            console.log(`Email Service Connected & Verified with ${config.service || config.host}`);
+        } catch (error) {
+            console.error('Email Service Connection Failed:', error);
+            // We don't throw here to avoid crashing the server, but logs will show the issue
+        }
     } else {
         const testAccount = await nodemailer.createTestAccount();
         console.log('Ethereal Email Test Account:', testAccount.user);

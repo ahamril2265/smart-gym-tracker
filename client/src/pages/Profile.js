@@ -7,7 +7,7 @@ export default function Profile() {
   const [profile, setProfile] = useState({});
   const [edit, setEdit] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const token = localStorage.getItem("token");
+
 
   // Preloaded Avatar Options
   const AVATAR_SEEDS = [

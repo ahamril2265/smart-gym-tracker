@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../utils/api";
 import BackButton from "../components/BackButton";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 export default function ProgramCreator() {
     const navigate = useNavigate();
@@ -13,8 +13,6 @@ export default function ProgramCreator() {
     const [exercises, setExercises] = useState([
         { name: "", sets: 3, reps: 10 } // Initial empty exercise
     ]);
-
-    const token = localStorage.getItem("token");
 
     const handleProgramChange = (e) => {
         setProgram({ ...program, [e.target.name]: e.target.value });
