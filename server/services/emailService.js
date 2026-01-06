@@ -71,7 +71,7 @@ async function sendWelcomeEmail(user, password) {
 async function sendActivationEmail(user, token) {
     if (!transporter) await init();
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const clientUrl = process.env.BASE_URL || process.env.CLIENT_URL || 'http://localhost:3000';
     const link = `${clientUrl}/activate?token=${token}`;
 
     const info = await transporter.sendMail({
@@ -132,6 +132,28 @@ const sendPaymentReminderToAdmin = async (adminEmail, overdueUsers) => {
     return info;
 };
 
+<<<<<<< Updated upstream
+=======
+const sendPasswordResetEmail = async (user, token) => {
+    if (!transporter) await init();
+
+    const clientUrl = process.env.BASE_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+    const link = `${clientUrl}/reset-password?token=${token}`;
+
+    const info = await transporter.sendMail({
+        from: '"Smart Gym Tracker" <no-reply@smartgym.com>',
+        to: user.email,
+        subject: "Password Reset Request",
+        text: `Hello ${user.username},\n\nYou requested a password reset. Please click the link below to reset your password:\n\n${link}\n\nIf you did not request this, please ignore this email.\n\nBest,\nSmart Gym Team`,
+        html: `<b>Hello ${user.username},</b><br><br>You requested a password reset. Please click the link below to reset your password:<br><br><a href="${link}">Reset Password</a><br><br>If you did not request this, please ignore this email.<br><br>Best,<br>Smart Gym Team`
+    });
+
+    console.log("Password Reset Email sent: %s", info.messageId);
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    return info;
+};
+
+>>>>>>> Stashed changes
 module.exports = {
     sendWelcomeEmail,
     sendActivationEmail,
