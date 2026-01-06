@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: smart-gym-tracker
+    env: node
+    plan: free
+    buildCommand: ./render-build.sh
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smart-gym-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BASE_URL
+        value: https://smart-gym-tracker.onrender.com
+    autoDeploy: false
+
+databases:
+  - name: smart-gym-db
+    plan: free
+    databaseName: smart_gym_tracker
+    user: smart_gym_user
+
+# Note: After first deploy, update BASE_URL with your actual Render URL
