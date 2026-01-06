@@ -132,8 +132,6 @@ const sendPaymentReminderToAdmin = async (adminEmail, overdueUsers) => {
     return info;
 };
 
-<<<<<<< Updated upstream
-=======
 const sendPasswordResetEmail = async (user, token) => {
     if (!transporter) await init();
 
@@ -153,10 +151,10 @@ const sendPasswordResetEmail = async (user, token) => {
     return info;
 };
 
->>>>>>> Stashed changes
 module.exports = {
     sendWelcomeEmail,
     sendActivationEmail,
     sendExpiryReminder,
-    sendPaymentReminderToAdmin
+    sendPaymentReminderToAdmin,
+    sendPasswordResetEmail // Export added
 };

@@ -14,8 +14,8 @@ npm install --prefix server
 # However, connecting to the DB during build phase might not always work if it's an internal DB.
 # Let's try. If it fails, we move it to start command `node server/server.js` wrapper.
 cd server
-npx sequelize-cli db:migrate
-npx sequelize-cli db:seed:all
+npx sequelize-cli db:migrate --env production
+npx sequelize-cli db:seed:all --env production
 cd ..
 
 npm run build --prefix client

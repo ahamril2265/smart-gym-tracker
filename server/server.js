@@ -9,7 +9,11 @@ const logRoutes = require('./routes/logs');
 const gymRoutes = require("./routes/gym");
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || '*', // Allow FRONTEND_URL or all if not set (fallback)
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
