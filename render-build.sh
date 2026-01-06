@@ -19,3 +19,7 @@ npx sequelize-cli db:seed:all
 cd ..
 
 npm run build --prefix client
+
+# Debug: Check if build folder exists
+echo "Checking build output..."
+ls -F client/build/ || echo "Client build folder missing!"
