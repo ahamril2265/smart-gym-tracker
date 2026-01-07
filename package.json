@@ -4,7 +4,7 @@
     "description": "Smart Gym Tracker Monorepo",
     "scripts": {
         "start": "node server/server.js",
-        "build": "./render-build.sh",
+        "build": "bash render-build.sh",
         "install-deps": "npm install && npm install --prefix client && npm install --prefix server"
     },
     "engines": {

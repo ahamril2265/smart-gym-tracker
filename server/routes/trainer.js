@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, UserProgram, Program, sequelize } = require('../models');
+const { User, UserProgram, Program, Attendance, sequelize } = require('../models');
 const jwt = require('jsonwebtoken');
 
 // Middleware to check if user is trainer
@@ -50,30 +50,79 @@ router.get('/clients', verifyTrainer, async (req, res) => {
     }
 });
 
-// 2. Assign Program to Client
-router.post('/assign-program', verifyTrainer, async (req, res) => {
-    const { userId, programId } = req.body;
+// 1.5 Get Specific Client's Assigned Programs
+router.get('/client-programs/:userId', verifyTrainer, async (req, res) => {
     try {
-        // Verify client belongs to this trainer (or is admin)
+        const { userId } = req.params;
+        // Verify client belongs to trainer
+        const client = await User.findByPk(userId);
+        if (!client) return res.status(404).json({ error: "Client not found" });
+        if (req.user.role !== 'admin' && client.trainerId !== req.user.id) {
+            return res.status(403).json({ error: "Not your client" });
+        }
+
+        const userPrograms = await UserProgram.findAll({ where: { user_id: userId } });
+
+        // Populate program details
+        const programs = await Promise.all(userPrograms.map(async (up) => {
+            const program = await Program.findByPk(up.program_id);
+            if (program) {
+                program.dataValues.schedule = up.schedule_days || [];
+                program.dataValues.assigned_date = up.assigned_date;
+                return program;
+            }
+            return null;
+        }));
+
+        res.json(programs.filter(p => p !== null));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 2. Assign Program to Client
+// 2. Assign Program to Client (Multi-Program Support)
+router.post('/assign-program', verifyTrainer, async (req, res) => {
+    const { userId, programId, days } = req.body; // days: ["Mon", "Wed"] etc.
+    try {
+        // Verify client
         const client = await User.findByPk(userId);
         if (!client) return res.status(404).json({ error: 'Client not found' });
 
+        // Check permission
         if (req.user.role !== 'admin' && client.trainerId !== req.user.id) {
-            return res.status(403).json({ error: 'You can only assign programs to your own clients' });
+            return res.status(403).json({ error: 'Not your client' });
         }
 
-        // Assign (using previous simple logic: delete old, add new)
-        // Note: UserProgram model was created but we can use raw query or model
-        // Let's use raw query for consistency with previous 'assign' route or update to model
-        // Using Model:
-        await UserProgram.destroy({ where: { user_id: userId } });
-        await UserProgram.create({
-            user_id: userId,
-            program_id: programId,
-            assigned_by: req.user.id
+        // Find existing assignment for this program or create new
+        const [assignment, created] = await UserProgram.findOrCreate({
+            where: { user_id: userId, program_id: programId },
+            defaults: {
+                assigned_by: req.user.id,
+                schedule_days: days || []
+            }
         });
 
-        res.json({ message: 'Program assigned successfully' });
+        if (!created) {
+            // Update days if already assigned
+            assignment.schedule_days = days || [];
+            await assignment.save();
+        }
+
+        res.json({ message: 'Program assigned/updated successfully', assignment });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 2.5 Unassign Specific Program
+router.post('/unassign-program', verifyTrainer, async (req, res) => {
+    const { userId, programId } = req.body;
+    try {
+        await UserProgram.destroy({
+            where: { user_id: userId, program_id: programId }
+        });
+        res.json({ message: "Program removed" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -91,12 +140,12 @@ router.post('/clients', verifyTrainer, async (req, res) => {
         const { generateMemberId } = require('../utils/idGenerator');
 
         const activation_token = uuidv4();
-        const member_id = await generateMemberId('user'); // Clients are always 'user' role
+        const member_id = await generateMemberId('client'); // Clients are always 'client' role
 
         const newClient = await User.create({
             username,
             email,
-            role: 'user',
+            role: 'client',
             trainerId: req.user.id, // Assign to self
             membershipType: 'basic',
             membershipStatus: 'active',
@@ -130,6 +179,76 @@ router.delete('/clients/:id', verifyTrainer, async (req, res) => {
         await client.save();
 
         res.json({ message: "Client unassigned successfully" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 5. Check-In (CRM Style)
+router.post('/check-in', verifyTrainer, async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Find or create attendance for today
+        const [attendance, created] = await Attendance.findOrCreate({
+            where: {
+                user_id: req.user.id,
+                date: today
+            },
+            defaults: {
+                check_in_time: new Date(),
+                check_out_time: null
+            }
+        });
+
+        // Update user status
+        const user = await User.findByPk(req.user.id);
+        user.trainerStatus = 'on_duty';
+        await user.save();
+
+        res.json({ message: "Checked In", attendance, status: 'on_duty' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 6. Check-Out (CRM Style)
+router.post('/check-out', verifyTrainer, async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Find today's attendance
+        const attendance = await Attendance.findOne({
+            where: {
+                user_id: req.user.id,
+                date: today
+            }
+        });
+
+        if (attendance) {
+            attendance.check_out_time = new Date();
+            await attendance.save();
+        }
+
+        // Update user status
+        const user = await User.findByPk(req.user.id);
+        user.trainerStatus = 'off_duty';
+        await user.save();
+
+        res.json({ message: "Checked Out", attendance, status: 'off_duty' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 7. Get Today's Attendance
+router.get('/attendance/today', verifyTrainer, async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const attendance = await Attendance.findOne({
+            where: { user_id: req.user.id, date: today }
+        });
+        res.json(attendance); // null if not checked in yet
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

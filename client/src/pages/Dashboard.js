@@ -16,26 +16,38 @@ export default function Dashboard() {
       try {
 
 
-        // Parallel fetching for speed
-        const [profileRes, programRes, workoutRes] = await Promise.all([
-          api.get("/user/profile"),
-          api.get("/programs/mine").catch(() => ({ data: [] })), // Handle no program
-          api.get("/workouts")
-        ]);
+        // Fetch Profile FIRST as it is critical
+        let profile = null;
+        try {
+          const profileRes = await api.get("/user/profile");
+          profile = profileRes.data;
+          setUser(profile);
+        } catch (e) {
+          console.error("Profile fetch failed", e);
+        }
 
-        setUser(profileRes.data);
+        if (profile) {
+          // Fetch other data in parallel, but don't break if they fail
+          const [programRes, workoutRes] = await Promise.allSettled([
+            api.get("/programs/mine"),
+            api.get("/workouts")
+          ]);
 
-        // Program might be array or object depending on implementation, usually array of assignments
-        // Based on previous code, endpoint might return list. Let's assume we take the first one.
-        const myProg = Array.isArray(programRes.data) ? programRes.data[0] : programRes.data;
-        setProgram(myProg);
+          if (programRes.status === 'fulfilled') {
+            const myProg = Array.isArray(programRes.value.data.programs)
+              ? programRes.value.data.programs[0] // handle new structure { programs: [...] }
+              : (Array.isArray(programRes.value.data) ? programRes.value.data[0] : programRes.value.data);
+            setProgram(myProg);
+          }
 
-        setRecentWorkouts(workoutRes.data.slice(0, 5)); // Top 5
+          if (workoutRes.status === 'fulfilled') {
+            setRecentWorkouts(workoutRes.value.data.slice(0, 5));
+          }
 
-        // Fetch Attendance separately as it needs ID which we get from profile
-        if (profileRes.data.id) {
-          const attRes = await api.get(`/attendance/history/${profileRes.data.id}`).catch(() => ({ data: [] }));
-          setAttendance(attRes.data);
+          // Fetch Attendance
+          api.get(`/attendance/history/${profile.id}`)
+            .then(res => setAttendance(res.data))
+            .catch(e => console.warn("Attendance fetch error", e));
         }
 
         setLoading(false);

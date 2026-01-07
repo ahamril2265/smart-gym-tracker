@@ -10,6 +10,11 @@ module.exports = (sequelize, DataTypes) => {
             program_id: { type: DataTypes.INTEGER, allowNull: false },
             assigned_by: DataTypes.INTEGER,
             assigned_date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+            schedule_days: {
+                type: DataTypes.JSON,
+                allowNull: true,
+                defaultValue: [] // e.g. ["Mon", "Wed"]
+            },
             createdAt: { type: DataTypes.DATE, field: "createdat" },
             updatedAt: { type: DataTypes.DATE, field: "updatedat" },
         },

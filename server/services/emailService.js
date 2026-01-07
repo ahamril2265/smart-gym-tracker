@@ -68,19 +68,82 @@ async function sendWelcomeEmail(user, password) {
     return info;
 }
 
+const QRCode = require('qrcode');
+const { generateWelcomePDF } = require('./pdfService');
+
 async function sendActivationEmail(user, token) {
     if (!transporter) await init();
 
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
     const link = `${clientUrl}/activate?token=${token}`;
 
-    const info = await transporter.sendMail({
+    // --- Calculate Expiry Date ---
+    let expiryDate = 'N/A';
+    if (user.start_date && user.membershipType) {
+        const start = new Date(user.start_date);
+        let monthsToAdd = 0;
+
+        // Simple heuristic for parsing strings like "12 Months + 3 Months" or "Monthly"
+        const typeLower = user.membershipType.toLowerCase();
+        if (typeLower.includes('12 month') || typeLower.includes('yearly') || typeLower.includes('year')) {
+            monthsToAdd = 12;
+            if (typeLower.includes('+ 3')) monthsToAdd += 3;
+        } else if (typeLower.includes('6 month')) {
+            monthsToAdd = 6;
+        } else if (typeLower.includes('3 month')) {
+            monthsToAdd = 3;
+        } else if (typeLower.includes('month')) {
+            monthsToAdd = 1;
+        }
+
+        if (monthsToAdd > 0) {
+            const expiry = new Date(start);
+            expiry.setMonth(expiry.getMonth() + monthsToAdd);
+            expiryDate = expiry.toLocaleDateString();
+        }
+    }
+
+    // --- Generate QR Code ---
+    let qrBuffer = null;
+    try {
+        // Generate QR as Buffer for PDF
+        qrBuffer = await QRCode.toBuffer(user.member_id || 'UNKNOWN', { width: 200 });
+    } catch (e) {
+        console.error("QR Gen Error:", e);
+    }
+
+    // --- Generate PDF ---
+    let pdfBuffer = null;
+    try {
+        const membershipDetails = {
+            planName: user.membershipType || 'Standard',
+            expiryDate: expiryDate,
+            pendingAmount: (user.total_amount || 0) - (user.amount_paid || 0)
+        };
+        pdfBuffer = await generateWelcomePDF(user, membershipDetails, qrBuffer);
+    } catch (e) {
+        console.error("PDF Gen Error:", e);
+    }
+
+    // --- Send Email ---
+    const mailOptions = {
         from: '"Smart Gym Tracker" <no-reply@smartgym.com>',
         to: user.email,
         subject: "Activate Your Smart Gym Account",
-        text: `Hello ${user.username},\n\nPlease click the link below to activate your account and set your password:\n\n${link}\n\nYour Member ID is: ${user.member_id}\n\nBest,\nSmart Gym Team`,
-        html: `<b>Hello ${user.username},</b><br><br>Please click the link below to activate your account and set your password:<br><br><a href="${link}">Activate Account</a><br><br><p>Your Member ID is: <b>${user.member_id}</b></p><br><br>Best,<br>Smart Gym Team`
-    });
+        text: `Hello ${user.username},\n\nPlease click the link below to activate your account and set your password:\n\n${link}\n\nYour Member ID is: ${user.member_id}\n\nPlease find your Welcome Letter and Invoice attached.\n\nBest,\nSmart Gym Team`,
+        html: `<b>Hello ${user.username},</b><br><br>Please click the link below to activate your account and set your password:<br><br><a href="${link}">Activate Account</a><br><br><p>Your Member ID is: <b>${user.member_id}</b></p><p>Please find your Welcome Letter and Invoice attached.</p><br><br>Best,<br>Smart Gym Team`,
+        attachments: []
+    };
+
+    if (pdfBuffer) {
+        mailOptions.attachments.push({
+            filename: 'Welcome_Invoice.pdf',
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+        });
+    }
+
+    const info = await transporter.sendMail(mailOptions);
 
     console.log("Activation Email sent: %s", info.messageId);
     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));

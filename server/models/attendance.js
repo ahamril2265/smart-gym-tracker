@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             allowNull: false
         },
+        check_out_time: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
         date: {
             type: DataTypes.DATEONLY,
             allowNull: false

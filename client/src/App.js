@@ -14,10 +14,12 @@ import Friends from './pages/Friends';
 import Nutrition from './pages/Nutrition';
 import Profile from './pages/Profile';
 import AdminDashboard from "./pages/AdminDashboard";
+import TrainerManagement from "./pages/TrainerManagement";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import Home from './pages/Home';
 
 import ProgramCreator from "./pages/ProgramCreator";
+import ProgramManagement from "./pages/ProgramManagement";
 import AttendanceScanner from "./pages/AttendanceScanner";
 import ActivateAccount from "./pages/ActivateAccount";
 
@@ -48,10 +50,12 @@ function App() {
 
         {/* Protected Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/trainer-management" element={<ProtectedRoute allowedRoles={['admin']}><TrainerManagement /></ProtectedRoute>} />
 
         {/* Protected Trainer Routes */}
         <Route path="/trainer" element={<ProtectedRoute allowedRoles={['trainer']}><TrainerDashboard /></ProtectedRoute>} />
         <Route path="/program-creator" element={<ProtectedRoute allowedRoles={['trainer']}><ProgramCreator /></ProtectedRoute>} />
+        <Route path="/program-management" element={<ProtectedRoute allowedRoles={['trainer']}><ProgramManagement /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

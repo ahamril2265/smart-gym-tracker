@@ -71,6 +71,62 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
+// 2.5 Update Program (NEW)
+router.put('/:id', authMiddleware, async (req, res) => {
+  const { name, description, difficulty, exercises } = req.body;
+  const t = await sequelize.transaction();
+
+  try {
+    const program = await Program.findByPk(req.params.id);
+    if (!program) {
+      await t.rollback();
+      return res.status(404).json({ error: "Program not found" });
+    }
+
+    // Check ownership: Only creator or admin can update
+    // Note: req.userId comes from middleware. Assuming Users have roles, we might need to fetch User to check admin.
+    // user.js model usually has role.
+    // For now, let's enforce creator check. If admin logic is needed, we'd need to fetch the user too.
+    // Simplified: Check if user is creator.
+    if (program.created_by !== req.userId) {
+      // Optionally check admin here if we had the user role in request or fetch it.
+      // Let's assume strict ownership for now or fetch user.
+      const { User } = require('../models');
+      const user = await User.findByPk(req.userId);
+      if (user.role !== 'admin') {
+        await t.rollback();
+        return res.status(403).json({ error: "Not authorized to update this program" });
+      }
+    }
+
+    // Update Program details
+    await program.update({ name, description, difficulty }, { transaction: t });
+
+    // Update Exercises (Replace all)
+    if (exercises) { // Only update exercises if provided
+      await ProgramExercise.destroy({ where: { program_id: program.id } }, { transaction: t });
+
+      if (exercises.length > 0) {
+        const exerciseData = exercises.map((ex, index) => ({
+          program_id: program.id,
+          name: ex.name,
+          sets: ex.sets || 3,
+          reps: ex.reps || 10,
+          position: index
+        }));
+        await ProgramExercise.bulkCreate(exerciseData, { transaction: t });
+      }
+    }
+
+    await t.commit();
+    res.json({ message: "Program updated successfully", program });
+
+  } catch (err) {
+    await t.rollback();
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 3. Delete Program
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
@@ -110,21 +166,66 @@ router.post('/assign/:programId', authMiddleware, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 5. Get the user's assigned program
+// 5. Get the user's assigned programs (Multi-Program Support)
 router.get('/mine', authMiddleware, async (req, res) => {
   const userId = req.userId;
   try {
-    const userProg = await UserProgram.findOne({ where: { user_id: userId } });
-    if (!userProg) return res.json({ program: null });
+    const userPrograms = await UserProgram.findAll({ where: { user_id: userId } });
+    if (!userPrograms || userPrograms.length === 0) return res.json({ programs: [] });
 
-    // Fetch full program details
-    const program = await Program.findByPk(userProg.program_id, {
-      include: [
-        { model: ProgramExercise, as: 'exercises', attributes: ['id', 'name', 'sets', 'reps', 'position'] }
-      ]
+    // Fetch details for all assigned programs
+    const programs = await Promise.all(userPrograms.map(async (up) => {
+      const program = await Program.findByPk(up.program_id, {
+        include: [
+          { model: ProgramExercise, as: 'exercises', attributes: ['id', 'name', 'sets', 'reps', 'position'] }
+        ]
+      });
+
+      // Attach schedule info to the program object for frontend convenience
+      if (program) {
+        program.dataValues.schedule = up.schedule_days || [];
+        program.dataValues.assigned_date = up.assigned_date;
+      }
+      return program;
+    }));
+
+    // Filter out nulls if program deleted
+    const validPrograms = programs.filter(p => p !== null);
+
+    res.json({ programs: validPrograms });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 6. User Self-Assign Program
+router.post('/self-assign', authMiddleware, async (req, res) => {
+  const userId = req.userId;
+  const { programId, days } = req.body;
+  try {
+    const [assignment, created] = await UserProgram.findOrCreate({
+      where: { user_id: userId, program_id: programId },
+      defaults: {
+        assigned_by: userId,
+        schedule_days: days || []
+      }
     });
 
-    res.json({ program });
+    if (!created) {
+      assignment.schedule_days = days || [];
+      await assignment.save();
+    }
+    res.json({ message: 'Program assigned/updated successfully', assignment });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 7. User Self-Unassign Program
+router.post('/self-unassign', authMiddleware, async (req, res) => {
+  const userId = req.userId;
+  const { programId } = req.body;
+  try {
+    await UserProgram.destroy({
+      where: { user_id: userId, program_id: programId }
+    });
+    res.json({ message: "Program removed" });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
