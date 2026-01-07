@@ -30,7 +30,7 @@ app.use("/api/gym", gymRoutes);
 app.use("/api/admin", require('./routes/admin'));
 app.use("/api/trainer", require('./routes/trainer'));
 app.use('/api/attendance', require('./routes/attendance'));
-app.use('/api/auth', require('./routes/auth_routes'));
+
 
 
 // Serve static assets in production
