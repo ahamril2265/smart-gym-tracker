@@ -29,4 +29,4 @@ ENV NODE_ENV=production
 ENV PORT=8080
 
 # Start the server (run migrations first)
-CMD ["sh", "-c", "cd server && npx sequelize-cli db:migrate --env production && node server.js"]
+CMD ["sh", "-c", "cd server && npx sequelize-cli db:migrate --env production && npx sequelize-cli db:seed:all --env production && node server.js"]
