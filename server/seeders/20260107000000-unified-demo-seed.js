@@ -36,7 +36,14 @@ module.exports = {
 
         for (const t of trainers) {
             const hash = await bcrypt.hash('trainer123', 10);
-            let exists = await queryInterface.rawSelect('users', { where: { email: t.email } }, ['id']);
+            let exists = await queryInterface.rawSelect('users', {
+                where: {
+                    [Sequelize.Op.or]: [
+                        { email: t.email },
+                        { username: t.name }
+                    ]
+                }
+            }, ['id']);
             if (!exists) {
                 await queryInterface.bulkInsert('users', [{
                     username: t.name,
@@ -68,7 +75,14 @@ module.exports = {
 
         for (const c of clients) {
             const hash = await bcrypt.hash('client123', 10);
-            let exists = await queryInterface.rawSelect('users', { where: { email: c.email } }, ['id']);
+            let exists = await queryInterface.rawSelect('users', {
+                where: {
+                    [Sequelize.Op.or]: [
+                        { email: c.email },
+                        { username: c.name }
+                    ]
+                }
+            }, ['id']);
             if (!exists) {
                 await queryInterface.bulkInsert('users', [{
                     username: c.name,
