@@ -2,9 +2,16 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation(); // Forces re-render on route change
+  const location = useLocation();
   const token = localStorage.getItem("token");
   const isAuthenticated = token && token !== "undefined" && token !== "null";
+
+  let user = {};
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch (e) {
+    console.error("Failed to parse user", e);
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -43,20 +50,43 @@ export default function Navbar() {
                   Dashboard
                 </Link>
 
-                {/* Links Section */}
-                <div className="hidden md:flex gap-4 items-center">
-                  <Link to="/admin" className="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-full transition">
-                    Admin Area
-                  </Link>
-                  <Link to="/trainer" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-full transition">
-                    Trainer Area
-                  </Link>
+                {/* Dynamic Links Based on Role */}
+                <div className="hidden md:flex gap-6 items-center">
+                  {user.role === 'admin' && (
+                    <>
+                      <Link to="/admin" className="font-medium text-amber-600 hover:text-amber-800 transition">Admin Dashboard</Link>
+                      <Link to="/trainer-management" className="font-medium text-amber-600 hover:text-amber-800 transition">Trainer Management</Link>
+                      {/* Admin Notifications/Plans are inside dashboard, but could link if separate routes existed */}
+                    </>
+                  )}
+
+                  {user.role === 'trainer' && (
+                    <>
+                      <Link to="/trainer" className="font-medium text-emerald-600 hover:text-emerald-800 transition">Trainer Dashboard</Link>
+                      <Link to="/program-management" className="font-medium text-emerald-600 hover:text-emerald-800 transition">Manage Programs</Link>
+                    </>
+                  )}
+
+                  {user.role === 'client' && (
+                    <>
+                      <Link to="/my-program" className="font-medium text-gray-600 hover:text-blue-600 transition">My Program</Link>
+                      <Link to="/workouts" className="font-medium text-gray-600 hover:text-blue-600 transition">History</Link>
+                      <Link to="/log-workout" className="font-medium text-gray-600 hover:text-blue-600 transition">Log Workout</Link>
+                    </>
+                  )}
                 </div>
 
                 <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
-                <Link to="/profile" className="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-blue-50 text-xl border border-gray-200 transition text-gray-700">
-                  👤
+                {/* Profile Link with Avatar if available */}
+                <Link to="/profile" className="flex items-center gap-2 group">
+                  <div className="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center border border-gray-200 overflow-hidden">
+                    {user.profile_picture ? (
+                      <img src={user.profile_picture} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-xl">👤</span>
+                    )}
+                  </div>
                 </Link>
 
                 <button

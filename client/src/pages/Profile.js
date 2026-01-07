@@ -27,6 +27,9 @@ export default function Profile() {
     formData.append('height', profile.height || '');
     formData.append('goal', profile.goal || '');
     formData.append('experience', profile.experience || '');
+    formData.append('dob', profile.dob || '');
+    formData.append('address', profile.address || '');
+    formData.append('phone_number', profile.phone_number || '');
 
     if (profile.file) {
       formData.append('profileImage', profile.file);
@@ -110,6 +113,27 @@ export default function Profile() {
                   value={profile.age || ""}
                   onChange={e => setProfile({ ...profile, age: e.target.value })}
                   placeholder="e.g. 25" type="number" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <input className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                  value={profile.dob || ""}
+                  onChange={e => setProfile({ ...profile, dob: e.target.value })}
+                  type="date" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                <input className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                  value={profile.phone_number || ""}
+                  onChange={e => setProfile({ ...profile, phone_number: e.target.value })}
+                  placeholder="Phone Number" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                  value={profile.address || ""}
+                  onChange={e => setProfile({ ...profile, address: e.target.value })}
+                  placeholder="City, Country" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
@@ -211,6 +235,14 @@ export default function Profile() {
                 <div>
                   <p className="text-sm text-gray-500">Height</p>
                   <p className="font-medium text-gray-900">{profile.height || "-"} cm</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium text-gray-900">{profile.phone_number || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium text-gray-900">{profile.address || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Goal</p>

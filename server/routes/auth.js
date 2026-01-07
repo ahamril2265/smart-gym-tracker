@@ -16,10 +16,10 @@ router.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const member_id = await generateMemberId('user');
+    const member_id = await generateMemberId('client');
 
     // Create User using Sequelize
-    // Default role is 'user'
+    // Default role is 'client'
     const newUser = await User.create({
       username,
       email,
@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
       // I need to check the User Model definition from Step 504 views...
       // Step 504 summary says "Updated User model... adjusted password_hash".
       // So likely 'password_hash' is the correct column name on the model.
-      role: 'user',
+      role: 'client',
       member_id,
       membershipType: 'basic',
       membershipStatus: 'active'

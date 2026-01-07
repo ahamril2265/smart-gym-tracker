@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       role: {
         type: DataTypes.STRING,
-        defaultValue: 'user'
+        defaultValue: 'client'
       },
       trainerStatus: {
         type: DataTypes.STRING,
@@ -104,6 +104,26 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATEONLY,
         allowNull: true,
         defaultValue: DataTypes.NOW
+      },
+      dob: {
+        type: DataTypes.DATEONLY,
+        allowNull: true
+      },
+      address: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      phone_number: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      weight: {
+        type: DataTypes.FLOAT,
+        allowNull: true
+      },
+      height: {
+        type: DataTypes.FLOAT,
+        allowNull: true
       }
     },
     {
